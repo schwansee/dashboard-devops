@@ -4,6 +4,8 @@ DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-60}
 
 PACKAGE_PATH=${PACKAGE_PATH:-$HOME/dashboard_packages}
 
+IMAGE_PATH=${PACKAGE_PATH}/images
+
 PAUSE_VERSION=${PAUSE_VERSION:-2.0}
 EXECHEALTHZ_AMD64_VERSION=${EXECHEALTHZ_AMD64_VERSION:-1.1}
 KUBEDNS_AMD64_VERSION=${KUBEDNS_AMD64_VERSION:-1.6}
@@ -73,13 +75,13 @@ function get_kubernetes_deps_tar() {
 
 ## 导入dns插件镜像, 导入顺序根据skydns-rc.yaml中的镜像下载顺序决定
 function import_addons_images_dns() {
-  sudo docker load < ${PACKAGE_PATH}/kubernetes/images/pause-${PAUSE_VERSION}.tar
-  sudo docker load < ${PACKAGE_PATH}/kubernetes/images/exechealthz-amd64-${EXECHEALTHZ_AMD64_VERSION}.tar
-  sudo docker load < ${PACKAGE_PATH}/kubernetes/images/kubends-amd64-${KUBEDNS_AMD64_VERSION}.tar
-  sudo docker load < ${PACKAGE_PATH}/kubernetes/images/kube-dnsmasq-amd64-${KUBE_DNSMASQ_AMD64_VERSION}.tar
+  sudo docker load < ${IMAGE_PATH}/pause-${PAUSE_VERSION}.tar
+  sudo docker load < ${IMAGE_PATH}/exechealthz-amd64-${EXECHEALTHZ_AMD64_VERSION}.tar
+  sudo docker load < ${IMAGE_PATH}/kubends-amd64-${KUBEDNS_AMD64_VERSION}.tar
+  sudo docker load < ${IMAGE_PATH}/kube-dnsmasq-amd64-${KUBE_DNSMASQ_AMD64_VERSION}.tar
 } 
 
 ## 导入dashboard插件镜像
 function import_addons_images_dashboard() {
-  sudo docker load < ${PACKAGE_PATH}/kubernetes/images/kubernetes-dashboard-amd64-v${DASHBOARD_VERSION}.tar
+  sudo docker load < ${IMAGE_PATH}/kubernetes-dashboard-amd64-v${DASHBOARD_VERSION}.tar
 }

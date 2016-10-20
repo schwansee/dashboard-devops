@@ -2,13 +2,15 @@
 
 PACKAGE_PATH=${PACKAGE_PATH:-$HOME/dashboard_packages}
 
+IMAGE_PATH=$PACKAGE_PATH/images
+
 DOCKER_REGISTRY_VERSION=${DOCKER_REGISTRY_VERSION:-2}
 
 ## 安装registry
 function install_docker_registry() {
   ## 先从本地导入registry镜像
   echo "load registry image"
-#  sudo docker load < ${PACKAGE_PATH}/kubernetes/images/registry-${DOCKER_REGISTRY_VERSION}.tar >& /dev/null
+#  sudo docker load < ${IMAGE_PATH}/registry-${DOCKER_REGISTRY_VERSION}.tar >& /dev/null
   
   ## 再运行registry容器
   echo "run registry and expose 5000 port"
@@ -21,7 +23,7 @@ function push_image_to_registry() {
   IMAGE_VERSION=$2
 
   echo "load specified image - ${IMAGE_NAME}-${IMAGE_VERSION}.tar"
-#  sudo docker load < ${PACKAGE_PATH}/kubernetes/images/${IMAGE_NAME}-${IMAGE_VERSION}.tar >& /dev/null
+#  sudo docker load < ${IMAGE_PATH}/${IMAGE_NAME}-${IMAGE_VERSION}.tar >& /dev/null
 
   echo "tag it and push to registry"
   sudo docker tag -f ${IMAGE_NAME} localhost:5000/${IMAGE_NAME}

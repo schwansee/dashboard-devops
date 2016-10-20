@@ -2,7 +2,7 @@
 
 PACKAGE_PATH=${PACKAGE_PATH:-$HOME/dashboard_packages}
 
-IMAGE_PATH=$PACKAGE_PATH/kubernetes/images
+IMAGE_PATH=$PACKAGE_PATH/images
 
 function load_images_all() {
   ls $IMAGE_PATH | while read image ; do sudo docker load < $image ; done
