@@ -37,6 +37,7 @@ echo
 
 function load_images_basics() {
 echo -n "load_images_basics"
+  sudo docker load < $IMAGE_PATH/pause-2.0.tar
   sudo docker load < $IMAGE_PATH/ubuntu-latest.tar
 echo " ... done"
 }
@@ -57,7 +58,8 @@ echo -n "load_images_dns"
  # sudo docker load < $IMAGE_PATH/kubedns-amd64-1.5.tar
   sudo docker load < $IMAGE_PATH/kubedns-amd64-1.6.tar
   sudo docker load < $IMAGE_PATH/kube-dnsmasq-amd64-1.3.tar
-  sudo docker load < $IMAGE_PATH/pause-2.0.tar
+ ## move pause-2.0.tar to load_images_basics functions
+ #sudo docker load < $IMAGE_PATH/pause-2.0.tar
  # sudo docker load < $IMAGE_PATH/pause-amd64-3.0.tar
  # sudo docker load < $IMAGE_PATH/skydns-2015-10-13-8c72f8c.tar
 echo " ... done"

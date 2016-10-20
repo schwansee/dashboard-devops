@@ -30,23 +30,30 @@ for i in $nodes; do
                 source deploy-docker-deps.sh && \
                 install_docker_deps_dpkg"
 
-  if [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "a" ]]; then
-    echo ai or a
+  ## mandatorily enter this branch
+  if true; then
     ssh $nodeIP "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
                   source deploy-docker-images.sh && \
                   load_images_basics && \
-                  load_images_registry && \
-                  load_images_heapster && \
-                  load_images_dns && \
-                  load_images_dashboard"
-  else 
-    echo i
-    ssh $nodeIP "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
-                  source deploy-docker-images.sh && \
-                  load_images_basics && \
-                  load_images_registry && \
-                  load_images_dns"
-
+                  load_images_registry"
+  else
+    if [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "a" ]]; then
+      echo ai or a
+      ssh $nodeIP "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
+                    source deploy-docker-images.sh && \
+                    load_images_basics && \
+                    load_images_registry && \
+                    load_images_heapster && \
+                    load_images_dns && \
+                    load_images_dashboard"
+    else
+      echo i
+      ssh $nodeIP "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
+                    source deploy-docker-images.sh && \
+                    load_images_basics && \
+                    load_images_registry && \
+                    load_images_dns"
+    fi
   fi
 
   ((ii=ii+1))
