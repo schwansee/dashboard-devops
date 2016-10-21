@@ -1,11 +1,16 @@
 #!/bin/bash
 
 function install_system_hosts() {
-  if [ ! -f /etc/hosts.bak ]; then 
-    sudo cp /etc/hosts{,.bak}
-  fi
 
   if [ ! -f /etc/host.gcr ]; then
+
+    if [ ! -f /etc/hosts.bak ]; then 
+      sudo cp /etc/hosts{,.bak}
+    else
+      ## avoid adding gcr contents to /etc/hosts repeatedly
+      sudo cp /etc/hosts{.bak,}
+    fi
+
     sudo bash -c 'cat << EOF >> /etc/hosts
 
 # gcr
@@ -16,6 +21,8 @@ function install_system_hosts() {
 EOF'
 
     sudo cp /etc/hosts{,.gcr}
+  else
+    sudo cp /etc/hosts{.gcr,}
   fi
 }
 
