@@ -15,9 +15,16 @@ for i in $nodes; do
   nodeIP=${i#*@}
   echo $nodeIP
   echo $PACKAGE_PATH
+
   ssh $nodeIP "mkdir -p $PACKAGE_PATH" >& /dev/null
   ## do not copy kubernetes packages to nodes
   ls $INSTALL_ROOT/dashboard_packages/ | grep -v kubernetes | while read f; do scp -r $INSTALL_ROOT/dashboard_packages/$f $nodeIP:$PACKAGE_PATH/ >& /dev/null; done
+  ## copy kubernets package to local admin node
+  mkdir -p $PACKAGE_PATH >& /dev/null
+  ## only copy kubernetes packages to admin node
+  ## TODO: the PACKAGE_PATH must exists on admin node, e.g., /home/satoshi/dashboard_packages which implies the node has a user named satoshi
+  cp -r $INSTALL_ROOT/dashboard_packages/kubernetes $PACKAGE_PATH/ >& /dev/null; done
+
   #scp -r $INSTALL_ROOT/dashboard_packages/ $nodeIP:$PACKAGE_PATH/ >& /dev/null
   scp -r $SCRIPT_PATH $nodeIP:$PACKAGE_PATH >& /dev/null
   ssh $nodeIP "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
