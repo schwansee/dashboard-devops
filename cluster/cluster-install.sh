@@ -81,6 +81,25 @@ function install_k8s_cluster() {
 echo
 }
 
+function install_k8s_new_node() {
+  KUBE_ROOT=$(dirname "${BASH_SOURCE}")/..
+  export KUBE_CONFIG_FILE=${KUBE_CONFIG_FILE:-${KUBE_ROOT}/cluster/ubuntu/config-default.sh}
+  source "${KUBE_CONFIG_FILE}"
+
+  source $INSTALL_ROOT/ubuntu/util.sh
+  setClusterInfo
+  #echo $MASTER_IP
+
+  local ii=0
+  for i in $nodes; do
+    if [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "i" ]]; then
+      provision-node $i
+      #echo $i
+    fi
+  ((ii=ii+1))
+  done
+}
+
 function install_k8s_dns_dashboard() {
   ADDONS_SCRIPT_DIRECTORY=cluster
   ADDONS_SCRIPT_PATH=$SCRIPT_PATH/$ADDONS_SCRIPT_DIRECTORY
@@ -177,6 +196,8 @@ function install_k8s_registry() {
 #sed_reconfDocker
 
 #install_k8s_cluster
+#install_k8s_new_node
+
 #install_k8s_dns_dashboard
 #install_k8s_heapster
 
