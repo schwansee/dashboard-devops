@@ -187,6 +187,7 @@ function install_k8s_registry() {
                     install_docker_registry && \
                     push_image_to_registry $REGISTRY_IMAGE_NAME $REGISTRY_IMAGE_VERSION"
     fi
+  ((ii=ii+1))
   done
 }
 
