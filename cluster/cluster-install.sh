@@ -86,6 +86,7 @@ function install_k8s_new_node() {
   export KUBE_CONFIG_FILE=${KUBE_CONFIG_FILE:-${KUBE_ROOT}/cluster/ubuntu/config-default.sh}
   source "${KUBE_CONFIG_FILE}"
 
+  set -x
   source $INSTALL_ROOT/ubuntu/util.sh
   setClusterInfo
   #echo $MASTER_IP
@@ -97,6 +98,138 @@ function install_k8s_new_node() {
       #echo $i
     fi
   ((ii=ii+1))
+  done
+}
+
+function install_k8s_remove_node() {
+  SSH_OPTS="-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -oLogLevel=ERROR -C"
+
+  source $INSTALL_ROOT/ubuntu/util.sh
+  setClusterInfo
+  #echo $MASTER_IP
+
+  local ii=0
+  for i in ${nodes}; do
+:<<UNSUPPORTED
+    if [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "a" ]]; then
+      echo "Cleaning on master ${i#*@}"
+      ssh $SSH_OPTS -t "$i" "
+        pgrep etcd && \
+        sudo -p '[sudo] password to stop master: ' -- /bin/bash -c '
+          service etcd stop
+
+          rm -rf \
+            /opt/bin/etcd* \
+            /etc/init/etcd.conf \
+            /etc/init.d/etcd \
+            /etc/default/etcd
+
+          rm -rf /infra*
+          rm -rf /srv/kubernetes
+          '
+      " || echo "Cleaning on master ${i#*@} failed"
+
+      if [[ "${roles_array[${ii}]}" == "ai" ]]; then
+        ssh $SSH_OPTS -t "$i" "sudo rm -rf /var/lib/kubelet"
+      fi
+
+    elif [[ "${roles_array[${ii}]}" == "i" ]]; then
+      echo "Cleaning on node ${i#*@}"
+      ssh $SSH_OPTS -t "$i" "
+        pgrep flanneld && \
+        sudo -p '[sudo] password to stop node: ' -- /bin/bash -c '
+          service flanneld stop
+          rm -rf /var/lib/kubelet
+          '
+        " || echo "Cleaning on node ${i#*@} failed"
+    else
+      echo "unsupported role for ${i}"
+    fi
+
+    ssh $SSH_OPTS -t "$i" "sudo -- /bin/bash -c '
+      rm -f \
+        /opt/bin/kube* \
+        /opt/bin/flanneld \
+        /etc/init/kube* \
+        /etc/init/flanneld.conf \
+        /etc/init.d/kube* \
+        /etc/init.d/flanneld \
+        /etc/default/kube* \
+        /etc/default/flanneld
+
+      rm -rf ~/kube
+      rm -f /run/flannel/subnet.env
+    '" || echo "cleaning legacy files on ${i#*@} failed"
+    ((ii=ii+1))
+UNSUPPORTED
+set -x
+
+    code=$(curl -X DELETE -I -m 10 -o /dev/null -s -w %{http_code} http://${MASTER_IP}:8080/api/v1/nodes/${i#*@})
+    if [ $code != "200" ]; then
+      echo "Stopping node ${i#*@} failed"
+    fi
+      
+    ## the current version only supports the node deleting
+    if [[ "${roles_array[${ii}]}" == "i" ]]; then
+      echo "Cleaning on node ${i#*@}"
+      ssh $SSH_OPTS -t "$i" "
+        pgrep flanneld && \
+        sudo -p '[sudo] password to stop node: ' -- /bin/bash -c '
+          service flanneld stop
+          rm -rf /var/lib/kubelet
+          '
+        " || echo "Cleaning on node ${i#*@} failed"
+
+      ssh $SSH_OPTS -t "$i" "sudo -- /bin/bash -c '
+        rm -f \
+          /opt/bin/kube* \
+          /opt/bin/flanneld \
+          /etc/init/kube* \
+          /etc/init/flanneld.conf \
+          /etc/init.d/kube* \
+          /etc/init.d/flanneld \
+          /etc/default/kube* \
+          /etc/default/flanneld
+
+        rm -rf ~/kube
+        rm -f /run/flannel/subnet.env
+      '" || echo "cleaning legacy files on ${i#*@} failed"
+
+    elif [[ "${roles_array[${ii}]}" == "ai" ]]; then
+      echo "Cleaning on node ${i#*@}"
+      ssh $SSH_OPTS -t "$i" "
+        pgrep flanneld && \
+        sudo -p '[sudo] password to stop node: ' -- /bin/bash -c '
+          service kubelet stop
+          service kube-proxy stop
+          rm -rf /var/lib/kubelet
+          '
+        " || echo "Cleaning on node ${i#*@} failed"
+
+      ssh $SSH_OPTS -t "$i" "sudo -- /bin/bash -c '
+        rm -f \
+          /opt/bin/kube{let,-proxy} \
+          /etc/init/kube{let,-proxy}.conf \
+          /etc/init.d/kube{let,-proxy} \
+          /etc/default/kube{let,-proxy}
+
+        rm -rf \
+          ~/kube/init_conf/kube{let,-proxy}.conf \
+          ~/kube/init_scripts/kube{let,-proxy} \
+          ~/kube/default/kube{let,-proxy} \
+          ~/kube/minion
+      '" || echo "cleaning legacy files on ${i#*@} failed"
+
+      echo "Restarting flanneld on node ${i#*@}"
+      ssh $SSH_OPTS -t "$i" "
+        sudo -p '[sudo] password to stop node: ' -- /bin/bash -c '
+          service flanneld restart
+      '" || echo "restarting flanneld on ${i#*@} failed"
+
+    else
+      echo "unsupported role for ${i} ${roles_array[${ii}]}"
+    fi
+    ((ii=ii+1))
   done
 }
 
@@ -198,6 +331,7 @@ function install_k8s_registry() {
 
 #install_k8s_cluster
 #install_k8s_new_node
+#install_k8s_remove_node
 
 #install_k8s_dns_dashboard
 #install_k8s_heapster
