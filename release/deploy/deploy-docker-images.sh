@@ -29,7 +29,7 @@ echo
 function load_images_basics() {
 echo -n "load_images_basics"
   sudo docker load < $IMAGE_PATH/pause-2.0.tar
-  sudo docker load < $IMAGE_PATH/ubuntu-latest.tar
+  # sudo docker load < $IMAGE_PATH/ubuntu-latest.tar
 echo " ... done"
 }
 
