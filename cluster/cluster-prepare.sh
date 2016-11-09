@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 INSTALL_ROOT=$(dirname "${BASH_SOURCE}")
 
 SCRIPT_DIRECTORY=deploy
@@ -46,6 +48,11 @@ if ([ $1 == "add" ] && [ "${roles_array[${ii}]}" == "ai" -o "${roles_array[${ii}
                   source deploy-docker-images.sh && \
                   load_images_basics && \
                   load_images_registry"
+
+    ssh $nodeIP "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
+                  source deploy-docker-registry.sh && \
+                  install_docker_registry && \
+                  push_image_to_registry hyperchain alpha"
   else
     if [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "a" ]]; then
       echo ai or a
@@ -77,11 +84,11 @@ while [ $# -gt 0 ]
 do
   case $1 in
     -d|--deploy)
-        #install_deps deploy
+         install_deps deploy >& /tmp/log.txt
         echo d
         ;;
     -a|--add)
-        #install_deps add
+         install_deps add >& /tmp/log.txt
         echo a
         ;;
     -r|--remove)

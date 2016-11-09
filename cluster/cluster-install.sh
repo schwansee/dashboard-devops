@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 INSTALL_ROOT=$(dirname "${BASH_SOURCE}")
 
 SCRIPT_DIRECTORY=deploy
@@ -77,7 +79,7 @@ function install_k8s_cluster() {
     ((ii=ii+1))
   done
 
-  bash -c "source $SCRIPT_PATH/$ENV_FILE_NAME && $INSTALL_ROOT/kube-up.sh"
+  bash -c "source $SCRIPT_PATH/$ENV_FILE_NAME && cd $INSTALL_ROOT && ./kube-up.sh >& /tmp/log.txt"
 echo
 }
 
@@ -94,7 +96,7 @@ function install_k8s_new_node() {
   local ii=0
   for i in $nodes; do
     if [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "i" ]]; then
-      provision-node $i
+      cd $INSTALL_ROOT && provision-node $i >& /tmp/log.txt
       #echo $i
     fi
   ((ii=ii+1))
@@ -324,10 +326,10 @@ function install_k8s_registry() {
   done
 }
 
-#sed_config_default
-#sed_download_release
-#sed_util
-#sed_reconfDocker
+ sed_config_default
+ sed_download_release
+ sed_util
+ sed_reconfDocker
 
 #install_k8s_cluster
 #install_k8s_new_node
@@ -342,15 +344,15 @@ while [ $# -gt 0 ]
 do
   case $1 in
     -d|--deploy)
-        #install_k8s_cluster
+         install_k8s_cluster
         echo d
         ;;
     -a|--add)
-        #install_k8s_new_node
+         install_k8s_new_node
         echo a
         ;;
     -r|--remove)
-        #install_k8s_remove_node
+         install_k8s_remove_node >& /tmp/log.txt
         echo r
         ;;
     --)

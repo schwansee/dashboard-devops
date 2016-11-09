@@ -23,7 +23,7 @@ function push_image_to_registry() {
   IMAGE_VERSION=$2
 
   echo "load specified image - ${IMAGE_NAME}-${IMAGE_VERSION}.tar"
-#  sudo docker load < ${IMAGE_PATH}/${IMAGE_NAME}-${IMAGE_VERSION}.tar >& /dev/null
+  sudo docker load < ${IMAGE_PATH}/${IMAGE_NAME}-${IMAGE_VERSION}.tar >& /dev/null
 
   echo "tag it and push to registry"
   sudo docker tag -f ${IMAGE_NAME} localhost:5000/${IMAGE_NAME}
