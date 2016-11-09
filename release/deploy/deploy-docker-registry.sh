@@ -22,16 +22,16 @@ function push_image_to_registry() {
   sudo docker load < ${IMAGE_PATH}/${IMAGE_NAME}-${IMAGE_VERSION}.tar >& /dev/null
 
   echo "tag it and push to registry"
-  sudo docker tag -f ${IMAGE_NAME} localhost:5000/${IMAGE_NAME}
+  sudo docker tag -f ${IMAGE_NAME}:${IMAGE_VERSION} localhost:5000/${IMAGE_NAME}-${IMAGE_VERSION}
 
   local counter=0
-  sudo docker push localhost:5000/${IMAGE_NAME}
+  sudo docker push localhost:5000/${IMAGE_NAME}-${IMAGE_VERSION}
   while [ $? -ne 0 ]
   do
     ((counter=counter+1))
     if [ $counter -lt 2 ]; then
       echo "try again $counter"
-      sudo docker push localhost:5000/${IMAGE_NAME}
+      sudo docker push localhost:5000/${IMAGE_NAME}-${IMAGE_VERSION}
     else
       echo "push image failed for $counter times"
       break
