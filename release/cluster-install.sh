@@ -69,11 +69,18 @@ function sed_reconfDocker() {
 
 function install_k8s_cluster() {
   local ii=0
+
+  for i in $nodes; do
+    ssh $i "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
+              source clean.sh && \
+              clean"
+  done
+
   for i in $nodes; do
     nodeIP=${i#*@}
     if [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "a" ]]; then
       echo "cp kubectl binary"
-      scp $INSTALL_ROOT/ubuntu/kubectl $nodeIP:/usr/local/bin >& /dev/null
+      scp $INSTALL_ROOT/dashboard_packages/kubernetes/kubectl $nodeIP:/usr/local/bin >& /dev/null
       break
     fi
     ((ii=ii+1))
@@ -96,6 +103,10 @@ function install_k8s_new_node() {
   local ii=0
   for i in $nodes; do
     if [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "i" ]]; then
+      ssh $i "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
+                source clean.sh && \
+                clean"
+
       cd $INSTALL_ROOT && provision-node $i >& /tmp/log.txt
       #echo $i
     fi
