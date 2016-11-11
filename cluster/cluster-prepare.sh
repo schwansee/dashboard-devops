@@ -78,6 +78,31 @@ fi
 done
 }
 
+function remove_deps() {
+##scp packages to remote servers
+local ii=0
+for i in $nodes; do
+  nodeIP=${i#*@}
+  echo $nodeIP
+  echo $PACKAGE_PATH
+
+if ([ $1 == "remove" ] && [ "${roles_array[${ii}]}" == "i" ]) || [ $1 == "purge" ]; then
+
+  ssh $nodeIP "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
+                source deploy-docker-deps.sh && \
+                uninstall_docker_deps_dpkg"
+  
+  ssh $nodeIP "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
+                source deploy-system-deps.sh && \
+                uninstall_system_deps_dpkg"
+
+  ssh $nodeIP "cd $PACKAGE_PATH/$SCRIPT_DIRECTORY && source $ENV_FILE_NAME && \
+                source deploy-system-hosts.sh && \
+                uninstall_system_hosts"
+fi
+done
+}
+
 #install_deps
 
 while [ $# -gt 0 ]
@@ -92,8 +117,12 @@ do
         echo a
         ;;
     -r|--remove)
-        #install_deps remove
+         remove_deps remove >> ./log-remove-remove.txt 2>&1
         echo r
+        ;;
+    -p|--purge)
+         remove_deps purge >> ./log-remove-purge.txt 2>&1
+        echo p
         ;;
     --)
         break

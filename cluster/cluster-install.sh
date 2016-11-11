@@ -208,7 +208,7 @@ set -x
         rm -f /run/flannel/subnet.env
       '" || echo "cleaning legacy files on ${i#*@} failed"
 
-    elif [[ "${roles_array[${ii}]}" == "ai" ]]; then
+    elif [[ $1 == "remove" ]] && [[ "${roles_array[${ii}]}" == "ai" ]]; then
       echo "Cleaning on node ${i#*@}"
       ssh $SSH_OPTS -t "$i" "
         pgrep flanneld && \
@@ -238,6 +238,29 @@ set -x
         sudo -p '[sudo] password to stop node: ' -- /bin/bash -c '
           service flanneld restart
       '" || echo "restarting flanneld on ${i#*@} failed"
+
+
+    elif [[ $1 == "purge" ]] && [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "a" ]]; then
+      echo "Cleaning on master ${i#*@}"
+      ssh $SSH_OPTS -t "$i" "
+        pgrep etcd && \
+        sudo -p '[sudo] password to stop master: ' -- /bin/bash -c '
+          service etcd stop
+
+          rm -rf \
+            /opt/bin/etcd* \
+            /etc/init/etcd.conf \
+            /etc/init.d/etcd \
+            /etc/default/etcd
+
+          rm -rf /infra*
+          rm -rf /srv/kubernetes
+          '
+      " || echo "Cleaning on master ${i#*@} failed"
+
+      if [[ "${roles_array[${ii}]}" == "ai" ]]; then
+        ssh $SSH_OPTS -t "$i" "sudo rm -rf /var/lib/kubelet"
+      fi
 
     else
       echo "unsupported role for ${i} ${roles_array[${ii}]}"
@@ -363,7 +386,11 @@ do
         echo a
         ;;
     -r|--remove)
-         install_k8s_remove_node >& /tmp/log.txt
+         install_k8s_remove_node remove >> ./log-remove-k8s-remove.txt 2>&1
+        echo r
+        ;;
+    -p|--purge)
+         install_k8s_remove_node purge >> ./log-remove-k8s-purge.txt 2>&1
         echo r
         ;;
     --)

@@ -258,5 +258,5 @@ function uninstall_docker_deps() {
 
   ## Uninstall Docker and its extra packages
   echo "Uninstall aufs-tools cgroup-lite libltdl7 libsystemd-journal0 docker-engine"
-  sudo apt-get remove --purge aufs-tools cgroup-lite docker-engine libltdl7 libsystemd-journal0
+  sudo apt-get -y remove --purge aufs-tools cgroup-lite docker-engine libltdl7 libsystemd-journal0
 }
