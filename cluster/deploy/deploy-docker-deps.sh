@@ -3,7 +3,8 @@
 PACKAGE_PATH=${PACKAGE_PATH:-$HOME/dashboard_packages}
 DOCKER_VERSION=${DOCKER_VERSION:-"1.9.1"}
 
-source ./deploy-check-deps.sh
+INSTALL_ROOT=$(dirname "${BASH_SOURCE}")
+source $INSTALL_ROOT/deploy-check-deps.sh
   
 function get_docker_deps_deb() {
   echo "Package path: $PACKAGE_PATH"

@@ -2,7 +2,8 @@
 
 PACKAGE_PATH=${PACKAGE_PATH:-$HOME/dashboard_packages}
 
-source ./deploy-check-deps.sh
+INSTALL_ROOT=$(dirname "${BASH_SOURCE}")
+source $INSTALL_ROOT/deploy-check-deps.sh
 
 function get_system_deps_deb() {
   echo "Package path: $PACKAGE_PATH"
