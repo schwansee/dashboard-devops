@@ -84,11 +84,11 @@ while [ $# -gt 0 ]
 do
   case $1 in
     -d|--deploy)
-         install_deps deploy >& /tmp/log.txt
+         install_deps deploy >> ./log-prepare-deploy.txt 2>&1
         echo d
         ;;
     -a|--add)
-         install_deps add >& /tmp/log.txt
+         install_deps add >> ./log-prepare-add.txt 2>&1
         echo a
         ;;
     -r|--remove)
