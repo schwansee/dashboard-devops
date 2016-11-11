@@ -86,7 +86,7 @@ function install_k8s_cluster() {
     ((ii=ii+1))
   done
 
-  bash -c "source $SCRIPT_PATH/$ENV_FILE_NAME && cd $INSTALL_ROOT && ./kube-up.sh >& /tmp/log.txt"
+  bash -c "source $SCRIPT_PATH/$ENV_FILE_NAME && cd $INSTALL_ROOT && ./kube-up.sh >> ./log-install-deploy.txt 2>&1"
 echo
 }
 
@@ -107,7 +107,7 @@ function install_k8s_new_node() {
                 source clean.sh && \
                 clean"
 
-      cd $INSTALL_ROOT && provision-node $i >& /tmp/log.txt
+      cd $INSTALL_ROOT && provision-node $i >> ./log-install-add.txt 2>&1
       #echo $i
     fi
   ((ii=ii+1))
