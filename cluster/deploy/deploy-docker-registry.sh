@@ -14,6 +14,7 @@ function install_docker_registry() {
   
   ## 再运行registry容器
   echo "run registry and expose 5000 port"
+  sudo docker stop registry && sudo docker rm registry
   sudo docker run -d -p 5000:5000 --restart=always --name registry registry:${DOCKER_REGISTRY_VERSION}
 }
 
