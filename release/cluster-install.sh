@@ -182,6 +182,7 @@ set -x
       echo "Stopping node ${i#*@} failed"
     fi
       
+    ## the current version only supports the node deleting
     if [[ "${roles_array[${ii}]}" == "i" ]]; then
       echo "Cleaning on node ${i#*@}"
       ssh $SSH_OPTS -t "$i" "
@@ -207,7 +208,7 @@ set -x
         rm -f /run/flannel/subnet.env
       '" || echo "cleaning legacy files on ${i#*@} failed"
 
-    elif [[ "${roles_array[${ii}]}" == "ai" ]]; then
+    elif [[ $1 == "remove" ]] && [[ "${roles_array[${ii}]}" == "ai" ]]; then
       echo "Cleaning on node ${i#*@}"
       ssh $SSH_OPTS -t "$i" "
         pgrep flanneld && \
@@ -238,6 +239,29 @@ set -x
           service flanneld restart
       '" || echo "restarting flanneld on ${i#*@} failed"
 
+
+    elif [[ $1 == "purge" ]] && [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "a" ]]; then
+      echo "Cleaning on master ${i#*@}"
+      ssh $SSH_OPTS -t "$i" "
+        pgrep etcd && \
+        sudo -p '[sudo] password to stop master: ' -- /bin/bash -c '
+          service etcd stop
+
+          rm -rf \
+            /opt/bin/etcd* \
+            /etc/init/etcd.conf \
+            /etc/init.d/etcd \
+            /etc/default/etcd
+
+          rm -rf /infra*
+          rm -rf /srv/kubernetes
+          '
+      " || echo "Cleaning on master ${i#*@} failed"
+
+      if [[ "${roles_array[${ii}]}" == "ai" ]]; then
+        ssh $SSH_OPTS -t "$i" "sudo rm -rf /var/lib/kubelet"
+      fi
+
     else
       echo "unsupported role for ${i} ${roles_array[${ii}]}"
     fi
@@ -251,13 +275,20 @@ function install_k8s_dns_dashboard() {
 
   if [ ! -d $ADDONS_SCRIPT_PATH ]; then
     mkdir -p $ADDONS_SCRIPT_PATH/{addons,skeleton,ubuntu}
+    ## copy all scripts under ./cluster directory with depth=1
     cp $INSTALL_ROOT/*.sh $ADDONS_SCRIPT_PATH
+    ## copy dns & dashboard directories
     cp -r $INSTALL_ROOT/addons/{dns,dashboard} $ADDONS_SCRIPT_PATH/addons
+    ## copy all scripts under ./cluster/skeleton directory
     cp $INSTALL_ROOT/skeleton/* $ADDONS_SCRIPT_PATH/skeleton
     
+    ## select some useful stuff under ./cluster/ubuntu directory
+    ## copy all scripts under ./cluster/ubuntu directory with depth=1
     cp $INSTALL_ROOT/ubuntu/*.sh $ADDONS_SCRIPT_PATH/ubuntu
+    ## copy kubectl binary under ./cluster/ubuntu/binaries directory
     mkdir -p $ADDONS_SCRIPT_PATH/ubuntu/binaries
     cp $INSTALL_ROOT/ubuntu/binaries/kubectl $ADDONS_SCRIPT_PATH/ubuntu/binaries
+    ## copy namespace.yaml
     cp $INSTALL_ROOT/ubuntu/namespace.yaml $ADDONS_SCRIPT_PATH/ubuntu
   fi  
 
@@ -280,6 +311,7 @@ function install_k8s_heapster() {
   HEAPSTER_SCRIPT_DIRECTORY=heapster
   HEAPSTER_SCRIPT_PATH=$SCRIPT_PATH/$HEAPSTER_SCRIPT_DIRECTORY
 
+  ## copy the origin files to script directory
   cp -r $INSTALL_ROOT/$HEAPSTER_SCRIPT_DIRECTORY $SCRIPT_PATH
 
   local ii=0
@@ -288,13 +320,17 @@ function install_k8s_heapster() {
     if [[ "${roles_array[${ii}]}" == "ai" || "${roles_array[${ii}]}" == "a" ]]; then
       echo ai or a $nodeIP
 
+      ## sed heapster-controller.yaml
       sed -i "s/ imagePullPolicy/# imagePullPolicy/g" $HEAPSTER_SCRIPT_PATH/heapster-controller.yaml
       sed -i "s/kubernetes.default/$nodeIP:8080\?inClusterConfig=false\&useServiceAccount=false/g" $HEAPSTER_SCRIPT_PATH/heapster-controller.yaml
       sed -i "s/monitoring-influxdb/$nodeIP/g" $HEAPSTER_SCRIPT_PATH/heapster-controller.yaml
 
+      ## sed influxdb-grafana-controller.yaml
       sed -i "/heapster_influxdb/a \ \ \ \ \ \ \ \ ports:\n        - containerPort: 8086\n          hostPort: 8086\n        - containerPort: 8083\n          hostPort: 8083" $HEAPSTER_SCRIPT_PATH/influxdb-grafana-controller.yaml
       sed -i "s/monitoring-influxdb/$nodeIP/g" $HEAPSTER_SCRIPT_PATH/influxdb-grafana-controller.yaml
 
+      ## it may be wrong, we should expose host port 8086
+      ## sed influxdb-service.yaml
       #sed -i "/targetPort: 8086/d " $HEAPSTER_SCRIPT_PATH/influxdb-service.yaml
 
       scp -r $HEAPSTER_SCRIPT_PATH $nodeIP:$PACKAGE_PATH/$SCRIPT_DIRECTORY >& /dev/null
@@ -350,7 +386,11 @@ do
         echo a
         ;;
     -r|--remove)
-         install_k8s_remove_node >& /tmp/log.txt
+         install_k8s_remove_node remove >> ./log-remove-k8s-remove.txt 2>&1
+        echo r
+        ;;
+    -p|--purge)
+         install_k8s_remove_node purge >> ./log-remove-k8s-purge.txt 2>&1
         echo r
         ;;
     --)
