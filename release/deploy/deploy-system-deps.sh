@@ -10,7 +10,6 @@ function get_system_deps_deb() {
 
   echo -n "get openssh-client"
   if [ ! -f ${PACKAGE_PATH}/system/openssh-client_6.6p1-2ubuntu2.8_amd64.deb ]; then
-    ##https://launchpad.net/ubuntu/trusty/+package/openssh-client
     wget http://launchpadlibrarian.net/278422678/openssh-client_6.6p1-2ubuntu2.8_amd64.deb -P ${PACKAGE_PATH}/system >& /dev/null
     if [ $? -ne 0 ]; then
       echo " ... failed"
@@ -23,7 +22,6 @@ function get_system_deps_deb() {
 
   echo -n "get curl"
   if [ ! -f ${PACKAGE_PATH}/system/curl_7.35.0-1ubuntu2.8_amd64.deb ]; then
-    ##https://launchpad.net/ubuntu/trusty/amd64/curl/7.35.0-1ubuntu2.8
     wget http://launchpadlibrarian.net/277306802/curl_7.35.0-1ubuntu2.8_amd64.deb -P ${PACKAGE_PATH}/system >& /dev/null
     if [ $? -ne 0 ]; then
       echo " ... failed"
@@ -36,7 +34,6 @@ function get_system_deps_deb() {
  
   echo -n "get libcurl3"
   if [ ! -f ${PACKAGE_PATH}/system/libcurl3_7.35.0-1ubuntu2.8_amd64.deb ]; then
-    ##https://launchpad.net/ubuntu/trusty/amd64/libcurl3/7.35.0-1ubuntu2.8
     wget http://launchpadlibrarian.net/277306804/libcurl3_7.35.0-1ubuntu2.8_amd64.deb -P ${PACKAGE_PATH}/system >& /dev/null
     if [ $? -ne 0 ]; then
       echo " ... failed"
@@ -50,7 +47,6 @@ function get_system_deps_deb() {
 
   echo -n "get bridge-utils"
   if [ ! -f ${PACKAGE_PATH}/system/bridge-utils_1.5-6ubuntu2_amd64.deb ]; then
-    ##https://launchpad.net/ubuntu/trusty/amd64/bridge-utils/1.5-6ubuntu2
     wget http://launchpadlibrarian.net/162125746/bridge-utils_1.5-6ubuntu2_amd64.deb -P ${PACKAGE_PATH}/system >& /dev/null
     if [ $? -ne 0 ]; then
       echo " ... failed"
@@ -102,10 +98,11 @@ function install_system_deps_dpkg() {
     echo " ... done"
   fi
  
-  result=`check_deps curl`
-  if [ $result == "no" ]; then
+# result=`check_deps curl`
+# if [ $result == "no" ]; then
+  if [ `check_deps curl` == "no" && `check_deps libcurl3` == "no" ]; then
   echo -n "Install curl packages"
-    sudo dpkg -i ${PACKAGE_PATH}/system/curl_7.35.0-1ubuntu2.8_amd64.deb >& /dev/null
+    sudo dpkg -i ${PACKAGE_PATH}/system/{curl_7.35.0-1ubuntu2.8_amd64.deb,libcurl3_7.35.0-1ubuntu2.8_amd64.deb} >& /dev/null
     if [ $? -ne 0 ]; then
       echo " ... failed"
       echo " please find another resource for the package - curl_7.35.0-1ubuntu2.8_amd64.deb"
@@ -113,20 +110,22 @@ function install_system_deps_dpkg() {
       exit 125
     fi
     echo " ... done"
+  else
+    sudo apt-get -y install curl libcurl3
   fi
  
-  result=`check_deps libcurl3`
-  if [ $result == "no" ]; then
-  echo -n "Install libcurl3 packages"
-    sudo dpkg -i ${PACKAGE_PATH}/system/libcurl3_7.35.0-1ubuntu2.8_amd64.deb >& /dev/null
-    if [ $? -ne 0 ]; then
-      echo " ... failed"
-      echo " please find another resource for the package - libcurl3_7.35.0-1ubuntu2.8_amd64.deb"
-      echo " download it and put it to the path: ${PACKAGE_PATH}/system"
-      exit 125
-    fi
-    echo " ... done"
-  fi
+# result=`check_deps libcurl3`
+# if [ $result == "no" ]; then
+# echo -n "Install libcurl3 packages"
+#   sudo dpkg -i ${PACKAGE_PATH}/system/libcurl3_7.35.0-1ubuntu2.8_amd64.deb >& /dev/null
+#   if [ $? -ne 0 ]; then
+#     echo " ... failed"
+#     echo " please find another resource for the package - libcurl3_7.35.0-1ubuntu2.8_amd64.deb"
+#     echo " download it and put it to the path: ${PACKAGE_PATH}/system"
+#     exit 125
+#   fi
+#   echo " ... done"
+# fi
   
   result=`check_deps bridge-utils`
   if [ $result == "no" ]; then
@@ -143,7 +142,6 @@ function install_system_deps_dpkg() {
 }
 
 function uninstall_system_deps() {
-  ## Uninstall openssh-client is deprecated
   # sudo apt-get -y remove --purge openssh-client
 
   # Uninstall curl libcurl3 bridge-utils
