@@ -102,10 +102,11 @@ function install_system_deps_dpkg() {
     echo " ... done"
   fi
  
-  result=`check_deps curl`
-  if [ $result == "no" ]; then
+# result=`check_deps curl`
+# if [ $result == "no" ]; then
+  if [ `check_deps curl` == "no" && `check_deps libcurl3` == "no" ]; then
   echo -n "Install curl packages"
-    sudo dpkg -i ${PACKAGE_PATH}/system/curl_7.35.0-1ubuntu2.8_amd64.deb >& /dev/null
+    sudo dpkg -i ${PACKAGE_PATH}/system/{curl_7.35.0-1ubuntu2.8_amd64.deb,libcurl3_7.35.0-1ubuntu2.8_amd64.deb} >& /dev/null
     if [ $? -ne 0 ]; then
       echo " ... failed"
       echo " please find another resource for the package - curl_7.35.0-1ubuntu2.8_amd64.deb"
@@ -113,20 +114,22 @@ function install_system_deps_dpkg() {
       exit 125
     fi
     echo " ... done"
+  else
+    sudo apt-get -y install curl libcurl3
   fi
  
-  result=`check_deps libcurl3`
-  if [ $result == "no" ]; then
-  echo -n "Install libcurl3 packages"
-    sudo dpkg -i ${PACKAGE_PATH}/system/libcurl3_7.35.0-1ubuntu2.8_amd64.deb >& /dev/null
-    if [ $? -ne 0 ]; then
-      echo " ... failed"
-      echo " please find another resource for the package - libcurl3_7.35.0-1ubuntu2.8_amd64.deb"
-      echo " download it and put it to the path: ${PACKAGE_PATH}/system"
-      exit 125
-    fi
-    echo " ... done"
-  fi
+# result=`check_deps libcurl3`
+# if [ $result == "no" ]; then
+# echo -n "Install libcurl3 packages"
+#   sudo dpkg -i ${PACKAGE_PATH}/system/libcurl3_7.35.0-1ubuntu2.8_amd64.deb >& /dev/null
+#   if [ $? -ne 0 ]; then
+#     echo " ... failed"
+#     echo " please find another resource for the package - libcurl3_7.35.0-1ubuntu2.8_amd64.deb"
+#     echo " download it and put it to the path: ${PACKAGE_PATH}/system"
+#     exit 125
+#   fi
+#   echo " ... done"
+# fi
   
   result=`check_deps bridge-utils`
   if [ $result == "no" ]; then
